@@ -1,12 +1,7 @@
 import SwiftUI
-import Combine
 
 struct NowView: View {
     @ObservedObject var taskModel: TaskModel
-
-    /// A timer that ticks every 1 second. We use it to add 1 to `elapsedSeconds` when running.
-    /// We use `Timer.publish` + `onReceive` so the UI updates automatically.
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     /// Used to show/hide the 'Modify Task' pop-up sheet.
     @State private var taskModelShowingModify: Bool = false
@@ -68,9 +63,6 @@ struct NowView: View {
 
                             // Tap to pause / resume the timer.
                             Button {
-                                // Pause / resume logic:
-                                // - Pausing reveals post-pause options (Modify / Done / Delete).
-                                // - Resuming hides them to reduce clutter.
                                 if taskModel.isTimerRunning {
                                     // Running -> pause.
                                     taskModel.isTimerRunning = false
@@ -119,7 +111,6 @@ struct NowView: View {
 
                             // Done: treat the task as finished and clear it.
                             Button {
-                                // Require confirmation when paused.
                                 pendingPauseAction = .done
                             } label: {
                                 Text("Done")
@@ -135,7 +126,6 @@ struct NowView: View {
 
                             // Delete: remove the task and clear it.
                             Button {
-                                // Require confirmation when paused.
                                 pendingPauseAction = .delete
                             } label: {
                                 Text("Delete")
@@ -181,12 +171,6 @@ struct NowView: View {
             Spacer()
         }
         .background(Color.white.ignoresSafeArea())
-        .onReceive(timer) { _ in
-            // Only count time when there is a task AND the timer is running.
-            // This stops the timer from counting when you paused it.
-            guard taskModel.hasActiveTask, taskModel.isTimerRunning else { return }
-            taskModel.elapsedSeconds += 1
-        }
         .sheet(isPresented: $taskModelShowingModify) {
             CreateTaskView(taskModel: taskModel, isModifyMode: true)
         }
@@ -208,8 +192,6 @@ struct NowView: View {
     }
 
     private func clearTask() {
-        // Reset all task + timer state back to the beginning.
-        // Putting it in one function avoids repeating the same reset code.
         taskModel.hasActiveTask = false
         taskModel.elapsedSeconds = 0
         taskModel.isTimerRunning = false
@@ -221,8 +203,6 @@ struct NowView: View {
     }
 
     private func formattedElapsedTime() -> String {
-        // Turn seconds into a readable text like 1m 05s.
-        // Example: 65 -> "1m 05s", 3661 -> "1h 01m 01s".
         let seconds = taskModel.elapsedSeconds
         let hours = seconds / 3600
         let minutes = (seconds % 3600) / 60
@@ -237,8 +217,6 @@ struct NowView: View {
 }
 
 fileprivate extension String {
-    /// Helper for the duration text fields.
-    /// If the user leaves it blank, we treat it as 0 so the UI does not look broken.
     func ifEmptyReturnZero() -> String {
         self.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "0" : self
     }
