@@ -85,26 +85,28 @@ struct ContentView: View {
         // Custom bottom-tab button.
         // This is intentionally simple (text-only) to keep the UI minimal and readable.
         Button(action: action) {
-            HStack {
-                Spacer()
-                Text(title)
-                    .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
-                    .foregroundColor(isSelected ? .black : .gray)
-                Spacer()
-            }
-            .padding(.vertical, 8)
-            .background(
-                Group {
-                    if isSelected {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.black.opacity(0.08))
-                            .shadow(color: Color.black.opacity(0.15),
-                                    radius: 4, x: 0, y: 2)
-                    } else {
-                        Color.clear
+            // IMPORTANT: make the tappable area match the oval/capsule area, not just the text.
+            // Without an explicit frame, each tab button collapses to the Text's intrinsic size.
+            Text(title)
+                .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
+                .foregroundColor(isSelected ? .black : .gray)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(
+                    Group {
+                        if isSelected {
+                            Capsule()
+                                .fill(Color.black.opacity(0.08))
+                                .shadow(color: Color.black.opacity(0.15),
+                                        radius: 4, x: 0, y: 2)
+                        } else {
+                            // Keep a transparent capsule so the hit-test area still feels like the oval.
+                            Capsule().fill(Color.clear)
+                        }
                     }
-                }
-            )
+                )
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
     }

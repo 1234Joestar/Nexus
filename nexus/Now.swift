@@ -11,6 +11,16 @@ struct NowView: View {
     /// Used to show/hide the 'Modify Task' pop-up sheet.
     @State private var taskModelShowingModify: Bool = false
 
+    /// Confirmation for destructive actions after pausing.
+    private enum PauseAction: String, Identifiable {
+        case done
+        case delete
+
+        var id: String { rawValue }
+    }
+
+    @State private var pendingPauseAction: PauseAction? = nil
+
     var body: some View {
         VStack {
             Spacer()
@@ -59,7 +69,7 @@ struct NowView: View {
                             // Tap to pause / resume the timer.
                             Button {
                                 // Pause / resume logic:
-                                // - Pausing reveals post-pause options (Continue / Modify / Done / Delete).
+                                // - Pausing reveals post-pause options (Modify / Done / Delete).
                                 // - Resuming hides them to reduce clutter.
                                 if taskModel.isTimerRunning {
                                     // Running -> pause.
@@ -90,22 +100,6 @@ struct NowView: View {
                     if taskModel.showAfterPauseOptions {
                         VStack(spacing: 16) {
 
-                            // Continue: resume the timer.
-                            Button {
-                                taskModel.isTimerRunning = true
-                                taskModel.showAfterPauseOptions = false
-                            } label: {
-                                Text("Continue")
-                                    .font(.headline)
-                                    .foregroundColor(.green)
-                                    .padding(.horizontal, 32)
-                                    .padding(.vertical, 10)
-                                    .background(
-                                        Capsule().fill(Color.black.opacity(0.1))
-                                    )
-                            }
-                            .buttonStyle(.plain)
-
                             // Modify: open task editing sheet.
                             Button {
                                 taskModel.isTimerRunning = false
@@ -125,10 +119,8 @@ struct NowView: View {
 
                             // Done: treat the task as finished and clear it.
                             Button {
-                                // "Done" and "Delete" currently share the same implementation:
-                                // they clear the active task and reset the timer state.
-                                // Later, you could differentiate them (e.g., Done writes a history record).
-                                clearTask()
+                                // Require confirmation when paused.
+                                pendingPauseAction = .done
                             } label: {
                                 Text("Done")
                                     .font(.headline)
@@ -143,7 +135,8 @@ struct NowView: View {
 
                             // Delete: remove the task and clear it.
                             Button {
-                                clearTask()
+                                // Require confirmation when paused.
+                                pendingPauseAction = .delete
                             } label: {
                                 Text("Delete")
                                     .font(.headline)
@@ -196,6 +189,21 @@ struct NowView: View {
         }
         .sheet(isPresented: $taskModelShowingModify) {
             CreateTaskView(taskModel: taskModel, isModifyMode: true)
+        }
+        .alert(item: $pendingPauseAction) { action in
+            let title = action == .done ? "Confirm Done" : "Confirm Delete"
+            let message = action == .done
+            ? "Mark this task as done? This will clear the current task and timer."
+            : "Delete this task? This will clear the current task and timer."
+
+            return Alert(
+                title: Text(title),
+                message: Text(message),
+                primaryButton: .destructive(Text("Confirm")) {
+                    clearTask()
+                },
+                secondaryButton: .cancel(Text("Cancel"))
+            )
         }
     }
 
