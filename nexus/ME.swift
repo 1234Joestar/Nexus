@@ -58,7 +58,7 @@ struct MeView: View {
                     } label: {
                         HStack {
                             Spacer()
-                            Text("Profile Setting")
+                            Text("Personality Setting")
                                 .font(.headline)
                                 .foregroundColor(.green)
                             Spacer()

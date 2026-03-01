@@ -173,7 +173,7 @@ struct NowView: View {
             return Alert(
                 title: Text(title),
                 message: Text(message),
-                primaryButton: .destructive(Text("Confirm")) {
+                primaryButton: .default(Text("Confirm")) {
                     handlePauseAction(action)
                 },
                 secondaryButton: .cancel(Text("Cancel"))
