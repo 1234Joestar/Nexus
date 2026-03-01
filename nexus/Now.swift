@@ -16,15 +16,16 @@ struct NowView: View {
 
     @State private var pendingPauseAction: PauseAction? = nil
 
+    // ✅ Achievements store injected from ContentView
+    @EnvironmentObject var achievementsStore: AchievementsStore
+
     var body: some View {
         VStack {
             Spacer()
 
             if taskModel.hasActiveTask {
-                // Active task UI: task info + timer + (optionally) post-pause actions.
                 VStack(spacing: 24) {
 
-                    // Top area: task name, optional details, and planned duration.
                     VStack(alignment: .leading, spacing: 8) {
                         Text(taskModel.name)
                             .font(.title2)
@@ -43,15 +44,12 @@ struct NowView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 24)
 
-                    // Middle area: circular timer view.
                     ZStack {
-                        // Circular background.
                         Circle()
                             .fill(Color.green.opacity(0.15))
                             .frame(width: 240, height: 240)
                             .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
 
-                        // Timer contents.
                         VStack(spacing: 12) {
                             Text("Time Studied")
                                 .font(.subheadline)
@@ -61,14 +59,11 @@ struct NowView: View {
                                 .font(.title2)
                                 .fontWeight(.semibold)
 
-                            // Tap to pause / resume the timer.
                             Button {
                                 if taskModel.isTimerRunning {
-                                    // Running -> pause.
                                     taskModel.isTimerRunning = false
                                     taskModel.showAfterPauseOptions = true
                                 } else {
-                                    // Paused -> resume.
                                     taskModel.isTimerRunning = true
                                     taskModel.showAfterPauseOptions = false
                                 }
@@ -88,11 +83,9 @@ struct NowView: View {
                         }
                     }
 
-                    // Bottom area: actions only shown after pausing.
                     if taskModel.showAfterPauseOptions {
                         VStack(spacing: 16) {
 
-                            // Modify: open task editing sheet.
                             Button {
                                 taskModel.isTimerRunning = false
                                 taskModel.showAfterPauseOptions = true
@@ -109,7 +102,6 @@ struct NowView: View {
                             }
                             .buttonStyle(.plain)
 
-                            // Done: treat the task as finished and clear it.
                             Button {
                                 pendingPauseAction = .done
                             } label: {
@@ -124,7 +116,6 @@ struct NowView: View {
                             }
                             .buttonStyle(.plain)
 
-                            // Delete: remove the task and clear it.
                             Button {
                                 pendingPauseAction = .delete
                             } label: {
@@ -147,7 +138,6 @@ struct NowView: View {
                 .padding(.vertical, 32)
 
             } else {
-                // No task state
                 VStack(spacing: 16) {
                     Text("No Task for Now")
                         .font(.title2)
@@ -184,11 +174,26 @@ struct NowView: View {
                 title: Text(title),
                 message: Text(message),
                 primaryButton: .destructive(Text("Confirm")) {
-                    clearTask()
+                    handlePauseAction(action)
                 },
                 secondaryButton: .cancel(Text("Cancel"))
             )
         }
+    }
+
+    // ✅ Write Achievements record THEN clear task
+    private func handlePauseAction(_ action: PauseAction) {
+        let title = taskModel.name
+        let details = taskModel.details
+
+        switch action {
+        case .done:
+            achievementsStore.addDone(title: title, details: details)
+        case .delete:
+            achievementsStore.addAbandoned(title: title, details: details)
+        }
+
+        clearTask()
     }
 
     private func clearTask() {

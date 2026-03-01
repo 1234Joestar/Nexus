@@ -6,9 +6,9 @@ enum AchievementStatus: String, Codable {
 }
 
 enum AchievementEvent: String, Codable {
-    case done          // 用户点 Done
-    case abandoned     // 用户点 Delete（放弃）
-    case toggled       // 在 Achievements 里手动切换状态
+    case done          // User Done
+    case abandoned     // User Delete（放弃）
+    case toggled       // Chaging Status at Achievements
 }
 
 struct AchievementRecord: Identifiable, Codable, Equatable {
@@ -17,7 +17,7 @@ struct AchievementRecord: Identifiable, Codable, Equatable {
     var details: String
     var status: AchievementStatus
     var event: AchievementEvent
-    /// “这条记录最后一次被确认/变更的时间”，用于排序（最新在最上面）
+    /// "The time when this record was last confirmed/changed", used for sorting (the latest is at the top)
     var updatedAt: Date
 
     init(
