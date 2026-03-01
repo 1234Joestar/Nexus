@@ -10,6 +10,9 @@ struct MeView: View {
     // ✅ Achievements sheet
     @State private var showAchievements = false
 
+    // ✅ AI Settings sheet
+    @State private var showAISettings = false
+
     // ✅ Get the shared achievements store from environment
     @EnvironmentObject var achievementsStore: AchievementsStore
 
@@ -82,6 +85,22 @@ struct MeView: View {
                         .background(Color.black.opacity(0.05))
                         .cornerRadius(12)
                     }
+
+                    // ✅ New: AI button (below Achievements)
+                    Button {
+                        showAISettings = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("AI")
+                                .font(.headline)
+                                .foregroundColor(.green)
+                            Spacer()
+                        }
+                        .padding()
+                        .background(Color.black.opacity(0.05))
+                        .cornerRadius(12)
+                    }
                 }
                 .padding(.horizontal, 24)
             }
@@ -141,9 +160,11 @@ struct MeView: View {
         // ✅ Achievements sheet
         .sheet(isPresented: $showAchievements) {
             AchievementsView()
-            // 不需要再 environmentObject，因为 ContentView 已经全局注入了
+        }
+
+        // ✅ AI Settings sheet
+        .sheet(isPresented: $showAISettings) {
+            AISettingsView()
         }
     }
 }
-
-//testing git
