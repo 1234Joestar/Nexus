@@ -7,8 +7,16 @@ struct MeView: View {
     @State private var showResetPassword = false
     @State private var showProfileSurvey = false
 
+    // ✅ Achievements sheet
+    @State private var showAchievements = false
+
+    // ✅ AI Settings sheet
+    @State private var showAISettings = false
+
+    // ✅ Get the shared achievements store from environment
+    @EnvironmentObject var achievementsStore: AchievementsStore
+
     private var username: String {
-        // If Firebase displayName exists, use it; else try email prefix; else fallback
         if let name = Auth.auth().currentUser?.displayName,
            !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return name
@@ -25,10 +33,9 @@ struct MeView: View {
     var body: some View {
         VStack(spacing: 0) {
 
-            // Top area: username capsule + custom button
+            // Top area: username capsule + custom buttons
             VStack(spacing: 18) {
 
-                // Username capsule (ellipse-like)
                 HStack(spacing: 12) {
                     Image(systemName: "person.crop.circle.fill")
                         .font(.system(size: 34))
@@ -47,28 +54,59 @@ struct MeView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 32)
 
-                // Custom button (same style as Change Password / Logout)
-                Button {
-                    showProfileSurvey = true
-                } label: {
-                    HStack {
-                        Spacer()
-                        Text("Profile Setting")
-                            .font(.headline)
-                            .foregroundColor(.green)
-                        Spacer()
+                // ✅ Custom buttons (same style)
+                VStack(spacing: 12) {
+                    Button {
+                        showProfileSurvey = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("Personality Setting")
+                                .font(.headline)
+                                .foregroundColor(.green)
+                            Spacer()
+                        }
+                        .padding()
+                        .background(Color.black.opacity(0.05))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color.black.opacity(0.05))
-                    .cornerRadius(12)
+
+                    Button {
+                        showAchievements = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("Achievements")
+                                .font(.headline)
+                                .foregroundColor(.green)
+                            Spacer()
+                        }
+                        .padding()
+                        .background(Color.black.opacity(0.05))
+                        .cornerRadius(12)
+                    }
+
+                    // ✅ New: AI button (below Achievements)
+                    Button {
+                        showAISettings = true
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text("AI")
+                                .font(.headline)
+                                .foregroundColor(.green)
+                            Spacer()
+                        }
+                        .padding()
+                        .background(Color.black.opacity(0.05))
+                        .cornerRadius(12)
+                    }
                 }
                 .padding(.horizontal, 24)
             }
 
-            // Push account buttons to bottom
             Spacer()
 
-            // Bottom area: Account + Change Password + Logout (moved down)
             VStack(alignment: .leading, spacing: 12) {
                 Text("Account")
                     .font(.headline)
@@ -107,7 +145,6 @@ struct MeView: View {
         }
         .background(Color.white)
 
-        // Reset password sheet (unchanged)
         .sheet(isPresented: $showResetPassword) {
             let currentEmail = Auth.auth().currentUser?.email ?? ""
             ResetPasswordView(
@@ -116,11 +153,18 @@ struct MeView: View {
             )
         }
 
-        // Survey sheet (new)
         .sheet(isPresented: $showProfileSurvey) {
             ProfileSurveyView()
         }
+
+        // ✅ Achievements sheet
+        .sheet(isPresented: $showAchievements) {
+            AchievementsView()
+        }
+
+        // ✅ AI Settings sheet
+        .sheet(isPresented: $showAISettings) {
+            AISettingsView()
+        }
     }
 }
-
-//testing git

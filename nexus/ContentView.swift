@@ -22,6 +22,11 @@ struct ContentView: View {
     /// `@StateObject` means we create the model once and keep it while the view refreshes.
     @StateObject private var taskModel = TaskModel()
 
+    /// Achievements persistent store (local JSON persistence).
+    @StateObject private var achievementsStore = AchievementsStore(
+        userId: Auth.auth().currentUser?.uid ?? "local"
+    )
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -43,7 +48,7 @@ struct ContentView: View {
                                 // Pass the shared model down so the timer/task data stays the same.
                                 NowView(taskModel: taskModel)
                             case .me:
-                                // 'Me' is for account/settings, so it does not need the task model.
+                                // 'Me' is for account/settings.
                                 MeView(onLogout: logout)
                             }
                         }
@@ -70,23 +75,18 @@ struct ContentView: View {
             }
             .navigationBarBackButtonHidden(true)
         }
+        // ✅ Key: inject achievements store globally
+        .environmentObject(achievementsStore)
     }
 
     // UI helpers
     // `tabItem` builds one button in the bottom bar.
     // `logout` signs out from Firebase and marks you as logged out in the app.
 
-
-    // Bottom bar tab item
-
     private func tabItem(title: String,
                          isSelected: Bool,
                          action: @escaping () -> Void) -> some View {
-        // Custom bottom-tab button.
-        // This is intentionally simple (text-only) to keep the UI minimal and readable.
         Button(action: action) {
-            // IMPORTANT: make the tappable area match the oval/capsule area, not just the text.
-            // Without an explicit frame, each tab button collapses to the Text's intrinsic size.
             Text(title)
                 .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
                 .foregroundColor(isSelected ? .black : .gray)
@@ -101,7 +101,6 @@ struct ContentView: View {
                                 .shadow(color: Color.black.opacity(0.15),
                                         radius: 4, x: 0, y: 2)
                         } else {
-                            // Keep a transparent capsule so the hit-test area still feels like the oval.
                             Capsule().fill(Color.clear)
                         }
                     }
@@ -111,17 +110,13 @@ struct ContentView: View {
         .buttonStyle(.plain)
     }
 
-    // Logout
-
     private func logout() {
         do {
-            // Firebase sign-out can fail, so we wrap it with `do/catch`.
             try Auth.auth().signOut()
         } catch {
             print("Logout failed: \(error.localizedDescription)")
         }
 
-        // Update the saved login value so the app goes back to the entry/login screen.
         isLoggedIn = false
     }
 }
